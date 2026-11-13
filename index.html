@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistem Informasi Permohonan Sertifikat Kegiatan SMA/SMK</title>
+<style>
+:root { --bg:#f4f6fb; --card:#fff; --text:#1f2937; --muted:#6b7280; --pri:#1a56db; --line:#e5e7eb; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+header { background:linear-gradient(135deg,#1a56db,#0e3a9e); color:#fff; padding:22px 16px; text-align:center; }
+header h1 { margin:0; font-size:1.25rem; line-height:1.3; }
+header p { margin:4px 0 0; font-size:.95rem; opacity:.95; }
+footer { text-align:center; padding:18px 12px 28px; font-size:.8rem; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); max-width:920px; margin:0 auto; }
+nav { display:flex; justify-content:center; gap:6px; padding:12px; flex-wrap:wrap; }
+nav button { border:1px solid var(--line); background:#fff; padding:9px 18px; border-radius:999px; cursor:pointer; font-size:.9rem; }
+nav button.on { background:var(--pri); color:#fff; border-color:var(--pri); }
+main { max-width:920px; margin:0 auto; padding:0 12px 40px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:14px; }
+label { display:block; font-weight:600; font-size:.88rem; margin:14px 0 5px; }
+select, input[type=text], input[type=password], input[type=file], textarea {
+width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:.95rem; background:#fff; }
+.hint { font-size:.78rem; color:var(--muted); margin-top:3px; }
+.btn { background:var(--pri); color:#fff; border:0; padding:11px 22px; border-radius:8px; font-size:.95rem; cursor:pointer; margin-top:18px; }
+.btn:disabled { opacity:.6; cursor:wait; }
+.btn.del { background:#b91c1c; margin-top:18px; margin-left:8px; }
+.btn.sec { background:#475569; margin-top:0; padding:8px 14px; font-size:.85rem; }
+.msg { padding:10px 14px; border-radius:8px; margin-top:14px; font-size:.9rem; display:none; }
+.msg.ok { background:#dcfce7; color:#166534; display:block; }
+.msg.err { background:#fee2e2; color:#991b1b; display:block; }
+table { width:100%; border-collapse:collapse; font-size:.86rem; }
+th, td { padding:9px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+th { background:#f8fafc; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+.wrap { overflow-x:auto; }
+.badge { padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight:700; white-space:nowrap; }
+.Diterima { background:#dbeafe; color:#1e40af; }
+.Diproses { background:#fef3c7; color:#92400e; }
+.Terbit { background:#dcfce7; color:#166534; }
+a { color:var(--pri); }
+.row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.row > * { flex:1; min-width:160px; }
+.adm { border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:12px; }
+.adm h4 { margin:0 0 4px; }
+.small { font-size:.8rem; color:var(--muted); }
+.krow { margin-bottom:8px; }
+.slot { border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-top:8px; background:#fff; }
+.hidden { display:none; }
+a.btn { display:inline-block; text-decoration:none; }
+.antr td { vertical-align:middle; }
+.antr td.sp { vertical-align:top; }
+.antr tr.in td:not(.sp) { border-bottom:1px dashed #eef0f3; }
+.antr td.dl { white-space:nowrap; }
+.krow { border:1px solid var(--line); border-radius:10px; padding:12px; margin:12px 0 10px; background:#fafbfd; }
+.khead { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.khead .knum { font-weight:700; font-size:.9rem; color:var(--text); }
+.kgrid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; margin-top:4px; }
+.kgrid label { margin-top:8px; }
+.kgrid input[type=file] { padding:8px; font-size:.85rem; }
+.knote { padding-top:30px; }
+@media (max-width:640px) { .kgrid { grid-template-columns:1fr; } .knote { padding-top:0; } }
+</style>
+</head>
+<body>
+<header>
+<h1>Sistem Informasi Permohonan Sertifikat Kegiatan SMA/SMK</h1>
+<p>Balai Pendidikan Menengah Kab. Gunungkidul</p>
+</header>
+<nav>
+<button id="t-form" class="on" onclick="tab('form')">Ajukan Permohonan</button>
+<button id="t-antrian" onclick="tab('antrian')">Status Antrian</button>
+<button id="t-admin" onclick="tab('admin')">Admin Dinas</button>
+</nav>
+<main>
+<!-- FORM -->
+<section id="p-form" class="card">
+<label>Nama Sekolah</label>
+<select id="sekolah"><option value="">Memuat daftar sekolah...</option></select>
+<label>Hal</label>
+<input type="text" id="hal" value="Permohonan Penerbitan Sertifikat" readonly>
+<div id="konsepList"></div>
+<div class="hint">Surat permohonan: PDF / JPG / PNG / DOC. Konsep sertifikat: Word (.doc / .docx). Daftar peserta: CSV (.csv). Maksimal 5 MB per file.</div>
+<button class="btn" id="btnKirim" onclick="kirim()">Kirim Permohonan</button>
+<div id="msgForm" class="msg"></div>
+<!-- Penampung kotak surat permohonan (dipindah otomatis ke Kegiatan 1 oleh script) -->
+<div id="suratHolder" class="hidden"><div id="suratBox">
+<label>Upload Surat Permohonan</label>
+<input type="file" id="surat" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+<div class="hint">PDF / JPG / PNG / DOC, maks. 5 MB.</div>
+</div></div>
+</section>
+<!-- ANTRIAN -->
+<section id="p-antrian" class="card hidden">
+<div class="row">
+<div>
+<label style="margin-top:0">Filter Sekolah</label>
+<select id="filterSekolah" onchange="renderAntrian()"><option value="">Semua sekolah</option></select>
+</div>
+<div><button class="btn sec" onclick="loadAntrian()">&#8635; Muat ulang</button></div>
+</div>
+<div class="wrap" style="margin-top:14px">
+<table class="antr">
+<thead><tr><th>No</th><th>Sekolah</th><th>Kegiatan</th><th>Tanggal</th><th>Status</th><th>Sertifikat</th></tr></thead>
+<tbody id="tbAntrian"><tr><td colspan="6">Memuat...</td></tr></tbody>
+</table>
+</div>
+</section>
+<!-- ADMIN -->
+<section id="p-admin" class="hidden">
+<div id="adminLogin" class="card">
+<label style="margin-top:0">Password Admin Dinas</label>
+<input type="password" id="pin" onkeydown="if(event.key==='Enter')adminMasuk()">
+<button class="btn" onclick="adminMasuk()">Masuk</button>
+<div id="msgLogin" class="msg"></div>
+</div>
+<div id="adminPanel" class="hidden">
+<div class="card row">
+<div><strong>Daftar Permohonan</strong></div>
+<div style="text-align:right">
+<button class="btn sec" onclick="loadAdmin()">&#8635; Muat ulang</button>
+<button class="btn sec" onclick="togglePass()">Ubah Password</button>
+<button class="btn sec" onclick="keluar()">Keluar</button>
+</div>
+</div>
+<div id="passBox" class="card hidden">
+<strong>Ubah Password Admin</strong>
+<label>Password lama</label>
+<input type="password" id="pwLama" autocomplete="off">
+<label>Password baru</label>
+<input type="password" id="pwBaru" autocomplete="off">
+<div class="hint">Minimal 6 karakter.</div>
+<label>Ulangi password baru</label>
+<input type="password" id="pwUlang" autocomplete="off">
+<button class="btn" id="btnPw" onclick="ubahPassword()">Simpan Password</button>
+<div id="msgPw" class="msg"></div>
+</div>
+<div id="adminList"></div>
+</div>
+</section>
+</main>
+<footer>
+Credit By Triyuliant<br>
+CP WA : <a href="https://wa.me/6287838222867" target="_blank" rel="noopener">087838222867</a>
+</footer>
+<script>
+/* Penghubung GitHub Pages -> Google Apps Script.
+   Di Google Apps Script, google.script.run sudah ada dan blok ini tidak melakukan apa-apa.
+   Di GitHub Pages, google.script.run ditiru: setiap pemanggilan dikirim ke web app Apps Script (doPost).
+   Jika alamat deployment berubah, ganti nilai SERTIFIKAT_API_URL di bawah. */
+(function () {
+  var SERTIFIKAT_API_URL = 'https://script.google.com/macros/s/AKfycbxuVwyMEFGqJ3Pf_SgQuohhtkfqpC_At5SImek6xr5asH1Vb1WBYu92WcwedNOdbzsXQQ/exec';
+  if (window.google && google.script && google.script.run) return;   // sedang berjalan di Apps Script
+
+  function panggil(nama, args, ok, gagal) {
+    function galat(pesan) { if (gagal) gagal({ message: pesan }); else console.error(pesan); }
+    fetch(SERTIFIKAT_API_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // text/plain: tanpa preflight CORS
+      body: JSON.stringify({ fn: nama, args: args })
+    })
+      .then(function (r) { return r.text(); })
+      .then(function (teks) {
+        var d;
+        try { d = JSON.parse(teks); }
+        catch (x) { throw new Error('Respons server tidak valid. Periksa deployment Apps Script (akses: Siapa saja, versi terbaru).'); }
+        if (d && d.ok) { if (ok) ok(d.data); }
+        else galat((d && d.error) || 'Terjadi kesalahan di server.');
+      })
+      .catch(function (x) {
+        var m = String((x && x.message) || x);
+        galat(/failed to fetch|networkerror|load failed/i.test(m)
+          ? 'Tidak dapat terhubung ke server. Periksa koneksi internet dan pengaturan deployment Apps Script.' : m);
+      });
+  }
+
+  function runner(ok, gagal) {
+    return new Proxy({}, {
+      get: function (_, nama) {
+        if (typeof nama !== 'string' || nama === 'then') return undefined;
+        if (nama === 'withSuccessHandler') return function (f) { return runner(f, gagal); };
+        if (nama === 'withFailureHandler') return function (f) { return runner(ok, f); };
+        if (nama === 'withUserObject') return function () { return runner(ok, gagal); };
+        return function () { panggil(nama, Array.prototype.slice.call(arguments), ok, gagal); };
+      }
+    });
+  }
+
+  window.google = window.google || {};
+  window.google.script = window.google.script || {};
+  window.google.script.run = runner();
+})();
+</script>
+<script>
+var DATA_ANTRIAN = [], DATA_ADMIN = [], PIN = '';
+var MAX = 5 * 1024 * 1024;
+function $(id) { return document.getElementById(id); }
+function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+function show(el, cls, txt) { el.className = 'msg ' + cls; el.textContent = txt; }
+function tab(n) {
+['form', 'antrian', 'admin'].forEach(function (x) {
+$('p-' + x).classList.toggle('hidden', x !== n);
+$('t-' + x).classList.toggle('on', x === n);
+});
+if (n === 'antrian') loadAntrian();
+}
+/* ---- Inisialisasi ---- */
+google.script.run.withSuccessHandler(function (list) {
+var opt = '<option value="">-- Pilih Nama Sekolah --</option>';
+list.forEach(function (s) { opt += '<option value="' + esc(s.nama) + '">' + esc(s.nama) + '</option>'; });
+$('sekolah').innerHTML = opt;
+var f = '<option value="">Semua sekolah</option>';
+list.forEach(function (s) { f += '<option value="' + esc(s.nama) + '">' + esc(s.nama) + '</option>'; });
+$('filterSekolah').innerHTML = f;
+}).withFailureHandler(function (e) {
+$('sekolah').innerHTML = '<option value="">Gagal memuat sekolah</option>';
+}).getSekolah();
+/* ---- File -> base64 ---- */
+function readFile(inp, label) {
+if (!inp.files[0]) return Promise.reject(new Error(label + ' wajib diunggah.'));
+return readFileObj(inp.files[0], label);
+}
+function readFileObj(f, label) {
+return new Promise(function (resolve, reject) {
+if (f.size > MAX) return reject(new Error(label + ' melebihi 5 MB.'));
+var r = new FileReader();
+r.onload = function () {
+resolve({ name: f.name, mime: f.type, base64: String(r.result).split(',')[1] });
+};
+r.onerror = function () { reject(new Error('Gagal membaca ' + label + '.')); };
+r.readAsDataURL(f);
+});
+}
+/* ---- Daftar konsep sertifikat (lebih dari satu) ---- */
+var MAX_KONSEP = 5, MAX_TOTAL = 15 * 1024 * 1024;
+var SURAT_BOX = null;
+function renumberKonsep() {
+var holder = $('suratHolder');
+if (!SURAT_BOX) SURAT_BOX = $('suratBox');
+holder.appendChild(SURAT_BOX);   // amankan dulu, lalu letakkan di Kegiatan 1
+var rows = document.querySelectorAll('#konsepList .krow');
+Array.prototype.forEach.call(rows, function (row, i) {
+row.querySelector('.knum').textContent = 'Nama Kegiatan';
+var slot = row.querySelector('.ksurat');
+slot.innerHTML = '';
+slot.appendChild(SURAT_BOX);
+});
+}
+function tambahKonsep() {
+var d = document.createElement('div');
+d.className = 'krow';
+d.innerHTML = '<div class="khead"><div class="knum"></div></div>' +
+'<input type="text" class="kkeg" maxlength="250" placeholder="Nama kegiatan, contoh: Workshop TEFA">' +
+'<div class="kgrid">' +
+'<div class="ksurat"></div>' +
+'<div><label>Upload Konsep</label><input type="file" class="kfile" accept=".doc,.docx">' +
+'<div class="hint">Word (.doc / .docx), maks. 5 MB.</div></div>' +
+'<div><label>Upload Daftar Peserta (CSV)</label><input type="file" class="kpes" accept=".csv,text/csv">' +
+'<div class="hint">Format CSV (.csv), maks. 5 MB.</div></div>' +
+'</div>';
+$('konsepList').appendChild(d);
+renumberKonsep();
+}
+function resetKonsep() {
+if (!SURAT_BOX) SURAT_BOX = $('suratBox');
+$('suratHolder').appendChild(SURAT_BOX);
+$('konsepList').innerHTML = '';
+tambahKonsep();
+}
+resetKonsep();
+/* ---- Kirim permohonan ---- */
+function kirim() {
+var m = $('msgForm'); m.className = 'msg';
+var sek = $('sekolah').value;
+if (!sek) return show(m, 'err', 'Pilih nama sekolah terlebih dahulu.');
+var kfiles = Array.prototype.slice.call(document.querySelectorAll('#konsepList .kfile'));
+var pfiles = Array.prototype.slice.call(document.querySelectorAll('#konsepList .kpes'));
+var kegs = Array.prototype.map.call(document.querySelectorAll('#konsepList .kkeg'), function (x) { return x.value.trim(); });
+var total = $('surat').files[0] ? $('surat').files[0].size : 0;
+for (var k = 0; k < kfiles.length; k++) {
+var kf = kfiles[k].files[0];
+if (!kegs[k]) return show(m, 'err', 'Nama kegiatan ' + (k + 1) + ' wajib diisi.');
+if (!kf) return show(m, 'err', 'Konsep sertifikat untuk kegiatan ' + (k + 1) + ' belum dipilih. Pilih file atau klik Hapus pada baris itu.');
+if (['doc', 'docx'].indexOf(kf.name.split('.').pop().toLowerCase()) < 0)
+return show(m, 'err', 'Konsep sertifikat ' + (k + 1) + ' harus berformat .doc atau .docx.');
+total += kf.size;
+var pf = pfiles[k].files[0];
+if (!pf) return show(m, 'err', 'Daftar peserta (CSV) untuk kegiatan ' + (k + 1) + ' belum dipilih.');
+if (pf.name.split('.').pop().toLowerCase() !== 'csv')
+return show(m, 'err', 'Daftar peserta ' + (k + 1) + ' harus berformat .csv.');
+total += pf.size;
+}
+if (!$('surat').files[0]) return show(m, 'err', 'Surat permohonan wajib diunggah.');
+if (total > MAX_TOTAL) return show(m, 'err', 'Total ukuran berkas melebihi 15 MB.');
+$('btnKirim').disabled = true; $('btnKirim').textContent = 'Mengirim...';
+Promise.all([readFile($('surat'), 'Surat permohonan')].concat(kfiles.map(function (inp, i) {
+return readFile(inp, 'Konsep sertifikat ' + (i + 1));
+})).concat(pfiles.map(function (inp, i) {
+return readFile(inp, 'Daftar peserta ' + (i + 1));
+})))
+.then(function (f) {
+google.script.run
+.withSuccessHandler(function (res) {
+m.className = 'msg ok';
+m.innerHTML = 'Permohonan terkirim.<br>Nomor: <b>' + esc(res.id) + '</b><br>Kode verifikasi sekolah: ' +
+'<b style="font-size:1.4rem;letter-spacing:3px">' + esc(res.kode) + '</b><br>' +
+(res.kodeBaru
+? '<b>Simpan kode ini</b>. Kode berlaku tetap untuk semua permohonan sekolah Anda dan diperlukan untuk mengunduh sertifikat setelah berstatus Terbit.'
+: 'Kode sama dengan permohonan sebelumnya dari sekolah Anda. Kode diperlukan untuk mengunduh sertifikat setelah berstatus Terbit.');
+$('surat').value = ''; resetKonsep();
+reset();
+})
+.withFailureHandler(function (e) { show(m, 'err', e.message); reset(); })
+.submitPermohonan({ sekolah: sek, surat: f[0], konsep: f.slice(1, 1 + kfiles.length).map(function (x, i) { x.kegiatan = kegs[i]; x.peserta = f[1 + kfiles.length + i]; return x; }) });
+})
+.catch(function (e) { show(m, 'err', e.message); reset(); });
+function reset() { $('btnKirim').disabled = false; $('btnKirim').textContent = 'Kirim Permohonan'; }
+}
+/* ---- Antrian ---- */
+var KODE = {}, LINKS = {};
+function loadAntrian() {
+LINKS = {};
+$('tbAntrian').innerHTML = '<tr><td colspan="6">Memuat...</td></tr>';
+google.script.run.withSuccessHandler(function (d) { DATA_ANTRIAN = d; renderAntrian(); })
+.withFailureHandler(function (e) { $('tbAntrian').innerHTML = '<tr><td colspan="6">' + esc(e.message) + '</td></tr>'; })
+.getAntrian();
+}
+/* Sel sertifikat untuk satu kegiatan: tombol unduh sendiri per kegiatan (terbuka setelah kode diisi satu kali per permohonan) */
+function sertCell(r, ri, k, st) {
+if (st !== 'Terbit') return '-';
+var u = LINKS[r.id] && LINKS[r.id][k];
+if (u) return '<a class="btn sec" href="' + esc(u) + '" target="_blank" rel="noopener">&#8595; Unduh</a>';
+return '<span class="small">Isi kode verifikasi</span>';
+}
+/* Kotak kode verifikasi: satu isian per permohonan */
+function kodeBox(r, ri) {
+var adaTerbit = (r.statusItem || []).some(function (x) { return x === 'Terbit'; });
+if (!adaTerbit || LINKS[r.id]) return '';
+return '<div style="margin-top:8px"><div class="small" style="font-weight:600">Kode verifikasi</div>' +
+'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><input type="text" id="kd' + ri + '" placeholder="Kode" maxlength="10" value="' + esc(KODE[r.id] || '') + '" onkeydown="if(event.key===\'Enter\')unduh(' + ri + ')" style="width:90px;padding:6px;text-transform:uppercase">' +
+'<button class="btn sec" style="padding:6px 10px" onclick="unduh(' + ri + ')">Buka unduhan</button></div>' +
+'<div class="msg" id="km' + ri + '" style="margin-top:6px;padding:6px 8px;font-size:.78rem"></div></div>';
+}
+function renderAntrian() {
+var f = $('filterSekolah').value, html = '';
+DATA_ANTRIAN.forEach(function (r, ri) {
+if (f && r.sekolah !== f) return;
+var n = Math.max(r.kegiatan.length, 1);
+var cat = r.catatan ? '<div class="small">' + esc(r.catatan) + '</div>' : '';
+for (var k = 0; k < n; k++) {
+var nama = r.kegiatan[k] || '-';
+var st = (r.statusItem && r.statusItem[k]) || r.status;
+html += '<tr class="' + (k < n - 1 ? 'in' : '') + '">';
+if (k === 0) {
+html += '<td class="sp" rowspan="' + n + '">' + esc(r.id) + '</td>' +
+'<td class="sp" rowspan="' + n + '">' + esc(r.sekolah) + '<div class="small">' + esc(r.hal) + '</div>' + cat + kodeBox(r, ri) + '</td>';
+}
+html += '<td><b>' + esc(nama) + '</b></td>';
+if (k === 0) html += '<td class="sp" rowspan="' + n + '">' + esc(r.waktu) + '</td>';
+html += '<td><span class="badge ' + esc(st) + '">' + esc(st) + '</span></td>' +
+'<td class="dl">' + sertCell(r, ri, k, st) + '</td></tr>';
+}
+});
+$('tbAntrian').innerHTML = html || '<tr><td colspan="6">Belum ada permohonan.</td></tr>';
+}
+/* Verifikasi kode satu kali; setelah benar, tiap kegiatan Terbit menampilkan tombol Unduh sendiri-sendiri */
+function unduh(ri) {
+var r = DATA_ANTRIAN[ri], m = $('km' + ri), kode = $('kd' + ri).value;
+m.className = 'msg';
+google.script.run.withSuccessHandler(function (urls) {
+KODE[r.id] = kode;
+LINKS[r.id] = {};
+urls.forEach(function (x) { LINKS[r.id][x.i] = x.url; });
+renderAntrian();
+}).withFailureHandler(function (e) { show(m, 'err', e.message); })
+.getLinkSertifikat(r.id, kode);
+}
+/* ---- Admin ---- */
+function adminMasuk() {
+var p = $('pin').value;
+google.script.run.withSuccessHandler(function () {
+PIN = p; $('adminLogin').classList.add('hidden'); $('adminPanel').classList.remove('hidden'); loadAdmin();
+}).withFailureHandler(function (e) { show($('msgLogin'), 'err', e.message); }).adminLogin(p);
+}
+function togglePass() { $('passBox').classList.toggle('hidden'); $('msgPw').className = 'msg'; }
+function keluar() {
+PIN = ''; DATA_ADMIN = []; $('pin').value = ''; $('adminList').innerHTML = '';
+$('passBox').classList.add('hidden'); $('adminPanel').classList.add('hidden');
+$('adminLogin').classList.remove('hidden'); $('msgLogin').className = 'msg';
+}
+function ubahPassword() {
+var m = $('msgPw'), lama = $('pwLama').value, baru = $('pwBaru').value, ulang = $('pwUlang').value;
+m.className = 'msg';
+if (!lama || !baru) return show(m, 'err', 'Semua kolom wajib diisi.');
+if (baru.length < 6) return show(m, 'err', 'Password baru minimal 6 karakter.');
+if (baru !== ulang) return show(m, 'err', 'Ulangi password baru tidak sama.');
+$('btnPw').disabled = true; $('btnPw').textContent = 'Menyimpan...';
+google.script.run.withSuccessHandler(function () {
+PIN = baru;
+$('pwLama').value = ''; $('pwBaru').value = ''; $('pwUlang').value = '';
+show(m, 'ok', 'Password berhasil diubah. Gunakan password baru saat login berikutnya.');
+$('btnPw').disabled = false; $('btnPw').textContent = 'Simpan Password';
+}).withFailureHandler(function (e) {
+show(m, 'err', e.message);
+$('btnPw').disabled = false; $('btnPw').textContent = 'Simpan Password';
+}).adminUbahPassword(lama, baru);
+}
+function loadAdmin() {
+$('adminList').innerHTML = '<div class="card">Memuat...</div>';
+google.script.run.withSuccessHandler(function (d) { DATA_ADMIN = d; renderAdmin(); })
+.withFailureHandler(function (e) { $('adminList').innerHTML = '<div class="card">' + esc(e.message) + '</div>'; })
+.adminList(PIN);
+}
+function optStatus(sel) {
+return ['Diterima', 'Diproses', 'Terbit'].map(function (s) {
+return '<option' + (s === sel ? ' selected' : '') + '>' + s + '</option>';
+}).join('');
+}
+function renderAdmin() {
+if (!DATA_ADMIN.length) { $('adminList').innerHTML = '<div class="card">Belum ada permohonan.</div>'; return; }
+var rows = DATA_ADMIN.map(function (r, i) {
+var detail =
+'<div class="small" style="margin-bottom:8px">NPSN ' + esc(r.npsn || '-') + ' &bull; Kode verifikasi: <b>' + esc(r.kode || '-') + '</b> &bull; Diupdate ' + esc(r.diupdate) + '</div>' +
+'<div style="margin:8px 0"><a href="' + esc(r.surat) + '" target="_blank" rel="noopener">Surat permohonan</a></div>' +
+'<div style="margin:6px 0"><b>Kegiatan, konsep sertifikat &amp; daftar peserta:</b><ol style="margin:4px 0 0 18px;padding:0">' +
+r.konsep.map(function (u, k) {
+return '<li>' + esc(r.kegiatan[k] || '(tanpa nama)') + ' &mdash; <a href="' + esc(u) + '" target="_blank" rel="noopener">Konsep</a>' +
+((r.peserta && r.peserta[k]) ? ' &bull; <a href="' + esc(r.peserta[k]) + '" target="_blank" rel="noopener">Daftar peserta (CSV)</a>' : '') + '</li>';
+}).join('') + '</ol></div>' +
+'<label>Catatan untuk sekolah (opsional)</label>' +
+'<input type="text" id="ct' + i + '" value="' + esc(r.catatan) + '">' +
+'<label>Status &amp; sertifikat jadi per kegiatan</label>' +
+r.konsep.map(function (u, k) {
+var cur = r.sertifikat[k] || '';
+var stK = (r.statusItem && r.statusItem[k]) || r.status;
+return '<div class="slot"><div class="row" style="gap:8px"><div style="font-weight:600;font-size:.88rem;flex:3">' + (k + 1) + '. ' + esc(r.kegiatan[k] || '(tanpa nama)') + '</div>' +
+'<select id="st' + i + '_' + k + '" style="flex:1;min-width:120px">' + optStatus(stK) + '</select></div>' +
+'<input type="file" id="fl' + i + '_' + k + '" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="margin-top:6px">' +
+'<input type="text" id="ln' + i + '_' + k + '" placeholder="atau tempel link sertifikat (opsional)" style="margin-top:6px" value="' + esc(cur) + '">' +
+(cur ? '<div class="small" style="margin-top:4px"><a href="' + esc(cur) + '" target="_blank" rel="noopener">Sertifikat saat ini</a> &mdash; kosongkan link untuk menghapus</div>'
+: '<div class="small" style="margin-top:4px">Belum ada sertifikat.</div>') + '</div>';
+}).join('') +
+'<button class="btn" id="bs' + i + '" onclick="simpan(' + i + ')">Simpan</button>' +
+'<button class="btn del" id="bh' + i + '" onclick="tanyaHapus(' + i + ')">Hapus</button>' +
+'<span id="hc' + i + '" class="hidden" style="margin-left:10px"><b>Yakin hapus permohonan ini?</b> ' +
+'<button class="btn del" style="margin:0 4px" onclick="hapus(' + i + ')">Ya, hapus</button>' +
+'<button class="btn sec" onclick="batalHapus(' + i + ')">Batal</button></span>' +
+'<div class="msg" id="ms' + i + '"></div>';
+var n = Math.max(r.kegiatan.length, 1), main = '';
+for (var k = 0; k < n; k++) {
+var stK2 = (r.statusItem && r.statusItem[k]) || r.status;
+main += '<tr class="' + (k < n - 1 ? 'in' : '') + '">';
+if (k === 0) {
+main += '<td class="sp" rowspan="' + n + '">' + (i + 1) + '</td>' +
+'<td class="sp" rowspan="' + n + '"><b>' + esc(r.sekolah) + '</b><div class="small">' + esc(r.id) + '</div></td>';
+}
+main += '<td>' + esc(r.kegiatan[k] || '-') + '</td>';
+if (k === 0) main += '<td class="sp" rowspan="' + n + '">' + esc(r.waktu) + '</td>';
+main += '<td><span class="badge ' + esc(stK2) + '">' + esc(stK2) + '</span></td>';
+if (k === 0) main += '<td class="sp" rowspan="' + n + '" style="text-align:right"><button class="btn sec" id="bp' + i + '" onclick="toggleProses(' + i + ')">Proses</button></td>';
+main += '</tr>';
+}
+return main +
+'<tr id="dr' + i + '" class="hidden"><td colspan="6" style="background:#f8fafc;padding:14px 16px">' + detail + '</td></tr>';
+}).join('');
+$('adminList').innerHTML = '<div class="card"><div class="wrap"><table class="antr">' +
+'<thead><tr><th>No</th><th>Sekolah</th><th>Kegiatan</th><th>Tanggal</th><th>Status</th><th></th></tr></thead>' +
+'<tbody>' + rows + '</tbody></table></div></div>';
+}
+function toggleProses(i) {
+var d = $('dr' + i), b = $('bp' + i), buka = d.classList.contains('hidden');
+d.classList.toggle('hidden', !buka);
+b.textContent = buka ? 'Tutup' : 'Proses';
+}
+function tanyaHapus(i) { $('bh' + i).classList.add('hidden'); $('hc' + i).classList.remove('hidden'); }
+function batalHapus(i) { $('hc' + i).classList.add('hidden'); $('bh' + i).classList.remove('hidden'); }
+function hapus(i) {
+var r = DATA_ADMIN[i], m = $('ms' + i);
+Array.prototype.forEach.call($('hc' + i).querySelectorAll('button'), function (b) { b.disabled = true; });
+google.script.run.withSuccessHandler(function () { loadAdmin(); })
+.withFailureHandler(function (e) {
+show(m, 'err', e.message);
+Array.prototype.forEach.call($('hc' + i).querySelectorAll('button'), function (b) { b.disabled = false; });
+batalHapus(i);
+})
+.adminHapus(PIN, r.id);
+}
+function simpan(i) {
+var r = DATA_ADMIN[i], m = $('ms' + i), b = $('bs' + i);
+m.className = 'msg';
+var n = r.konsep.length, picks = [], tot = 0, k;
+for (k = 0; k < n; k++) {
+var fl = $('fl' + i + '_' + k).files[0];
+picks.push(fl || null);
+if (fl) tot += fl.size;
+}
+var reset = function () { b.disabled = false; b.textContent = 'Simpan'; };
+if (tot > MAX_TOTAL) return show(m, 'err', 'Total ukuran berkas melebihi 15 MB.');
+b.disabled = true; b.textContent = 'Menyimpan...';
+Promise.all(picks.map(function (f, k) {
+return f ? readFileObj(f, 'File sertifikat kegiatan ' + (k + 1)) : Promise.resolve(null);
+})).then(function (files) {
+var items = files.map(function (fo, k) { return { status: $('st' + i + '_' + k).value, url: $('ln' + i + '_' + k).value, file: fo }; });
+google.script.run.withSuccessHandler(function () {
+show(m, 'ok', 'Tersimpan.'); reset(); setTimeout(loadAdmin, 900);
+}).withFailureHandler(function (e) {
+show(m, 'err', e.message); reset();
+}).adminUpdate(PIN, { id: r.id, catatan: $('ct' + i).value, items: items });
+}).catch(function (e) { show(m, 'err', e.message); reset(); });
+}
+</script>
+</body>
+</html>
